@@ -1,4 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://b400eewdxmwt7"]
+[gd_scene load_steps=3 format=3 uid="uid://b400eewdxmwt7"]
+
+[ext_resource type="Script" path="res://addons/nodot/camera/IsometricCamera3D.gd" id="1_27cxl"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_8vbih"]
 size = Vector3(50, 1, 50)
@@ -7,3 +9,8 @@ size = Vector3(50, 1, 50)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("BoxMesh_8vbih")
+
+[node name="IsometricCamera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.55077, 0)
+script = ExtResource("1_27cxl")
+enabled = true
