@@ -18,6 +18,7 @@ class_name IsometricCamera3D extends Camera3D
 ## The zoom speed
 @export var zoom_speed: float = 20.0
 
+
 @export_category("Input Actions")
 @export var left_action: String = "isometric_camera_left"
 @export var right_action: String = "isometric_camera_right"
@@ -51,17 +52,19 @@ func _physics_process(delta):
 	else:
 		velocity.x = lerp(velocity.x, direction.x, movement_speed * delta)
 		velocity.z = lerp(velocity.z, direction.z, movement_speed * delta)
-		
-	if Input.is_action_pressed(rotate_left_action):
-		rotation.y += rotation_speed * delta
-	if Input.is_action_pressed(rotate_right_action):
-		rotation.y -= rotation_speed * delta
-		
-	if Input.is_action_just_pressed(zoom_in_action):
-		zoom_velocity = -global_transform.basis.z * zoom_speed * delta
-	if Input.is_action_just_pressed(zoom_out_action):
-		zoom_velocity = global_transform.basis.z * zoom_speed * delta
-	zoom_velocity = lerp(zoom_velocity, Vector3.ZERO, (zoom_speed / 2) * delta)
+	
+	if can_rotate:
+		if Input.is_action_pressed(rotate_left_action):
+			rotation.y += rotation_speed * delta
+		if Input.is_action_pressed(rotate_right_action):
+			rotation.y -= rotation_speed * delta
+	
+	if can_zoom:
+		if Input.is_action_just_pressed(zoom_in_action):
+			zoom_velocity = -global_transform.basis.z * zoom_speed * delta
+		if Input.is_action_just_pressed(zoom_out_action):
+			zoom_velocity = global_transform.basis.z * zoom_speed * delta
+		zoom_velocity = lerp(zoom_velocity, Vector3.ZERO, (zoom_speed / 2) * delta)
 		
 	position += (velocity + zoom_velocity)
 
@@ -86,3 +89,4 @@ func register_mouse_actions():
 		if not InputMap.has_action(action_name):
 			InputMap.add_action(action_name)
 			InputManager.add_action_event_mouse(action_name, default_keys[i])
+			
