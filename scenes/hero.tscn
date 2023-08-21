@@ -1,0 +1,80 @@
+[gd_scene load_steps=12 format=3 uid="uid://d0oxtyky6jv4t"]
+
+[ext_resource type="Script" path="res://addons/nodot/kits/RTS/RTSSelectable.gd" id="1_x6ha1"]
+[ext_resource type="Script" path="res://scenes/hero.gd" id="1_xtfli"]
+[ext_resource type="Script" path="res://addons/nodot/utility/SignalConnector.gd" id="3_ejttr"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xer7x"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_q8k7f"]
+material = SubResource("StandardMaterial3D_xer7x")
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ouqf5"]
+
+[sub_resource type="Gradient" id="Gradient_rj4yh"]
+colors = PackedColorArray(0, 0, 0, 0, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_l7ld4"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_3c7bp"]
+seamless = true
+color_ramp = SubResource("Gradient_rj4yh")
+noise = SubResource("FastNoiseLite_l7ld4")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ujtcp"]
+transparency = 1
+albedo_texture = SubResource("NoiseTexture2D_3c7bp")
+emission_enabled = true
+emission = Color(0, 0.827451, 0.341176, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_d3txu"]
+material = SubResource("StandardMaterial3D_ujtcp")
+inner_radius = 0.815
+outer_radius = 0.94
+
+[node name="Hero" type="CharacterBody3D" node_paths=PackedStringArray("nav")]
+script = ExtResource("1_xtfli")
+nav = NodePath("NavigationAgent3D")
+default_gravity = 95.0
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+avoidance_enabled = true
+radius = 0.6
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_q8k7f")
+skeleton = NodePath("")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_ouqf5")
+
+[node name="RTSSelectable" type="Node" parent="."]
+script = ExtResource("1_x6ha1")
+
+[node name="SelectSignalConnector" type="Node" parent="RTSSelectable" node_paths=PackedStringArray("trigger_node", "target_node")]
+script = ExtResource("3_ejttr")
+trigger_node = NodePath("..")
+target_node = NodePath("../..")
+trigger_signal = "selected"
+target_method = "selected"
+
+[node name="DeselectSignalConnector" type="Node" parent="RTSSelectable" node_paths=PackedStringArray("trigger_node", "target_node")]
+script = ExtResource("3_ejttr")
+trigger_node = NodePath("..")
+target_node = NodePath("../..")
+trigger_signal = "deselected"
+target_method = "deselected"
+
+[node name="ActionSignalConnector" type="Node" parent="RTSSelectable" node_paths=PackedStringArray("trigger_node", "target_node")]
+script = ExtResource("3_ejttr")
+trigger_node = NodePath("..")
+target_node = NodePath("../..")
+trigger_signal = "actioned"
+target_method = "action"
+
+[node name="SelectedIndicator" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.795326, 0)
+visible = false
+mesh = SubResource("TorusMesh_d3txu")
+
+[connection signal="velocity_computed" from="NavigationAgent3D" to="." method="_on_navigation_agent_3d_velocity_computed"]
