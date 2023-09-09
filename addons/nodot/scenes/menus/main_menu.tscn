@@ -15,6 +15,7 @@ func _on_pressed():
 	var map: PackedScene = load(first_scene_path)
 	var map_instance = map.instantiate()
 	get_tree().root.add_child(map_instance)
+	menu_container.get_parent().hide_all()
 "
 
 [sub_resource type="GDScript" id="GDScript_1bk6e"]
@@ -78,6 +79,11 @@ text = "Start Game"
 script = SubResource("GDScript_ymbmu")
 menu_container = NodePath("../../../..")
 
+[node name="StartGameButton" type="Button" parent="Control/CenterContainer/VBoxContainer/StartGameButton" node_paths=PackedStringArray("menu_container")]
+text = "Start Game"
+script = SubResource("GDScript_ymbmu")
+menu_container = NodePath("../../../../..")
+
 [node name="MultiplayerButton" type="Button" parent="Control/CenterContainer/VBoxContainer" node_paths=PackedStringArray("menu_container")]
 layout_mode = 2
 text = "Multiplayer"
@@ -96,6 +102,7 @@ text = "Quit"
 script = SubResource("GDScript_uguho")
 
 [connection signal="pressed" from="Control/CenterContainer/VBoxContainer/StartGameButton" to="Control/CenterContainer/VBoxContainer/StartGameButton" method="_on_pressed"]
+[connection signal="pressed" from="Control/CenterContainer/VBoxContainer/StartGameButton/StartGameButton" to="Control/CenterContainer/VBoxContainer/StartGameButton/StartGameButton" method="_on_pressed"]
 [connection signal="pressed" from="Control/CenterContainer/VBoxContainer/MultiplayerButton" to="Control/CenterContainer/VBoxContainer/MultiplayerButton" method="_on_pressed"]
 [connection signal="pressed" from="Control/CenterContainer/VBoxContainer/OptionsButton" to="Control/CenterContainer/VBoxContainer/OptionsButton" method="_on_pressed"]
 [connection signal="pressed" from="Control/CenterContainer/VBoxContainer/QuitButton" to="Control/CenterContainer/VBoxContainer/QuitButton" method="_on_pressed"]
