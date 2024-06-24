@@ -1,4 +1,3 @@
-@tool
 ## A Node to move other nodes from one place to another (any maybe even back again)
 class_name Mover3D extends Nodot3D
 
@@ -16,7 +15,7 @@ signal movement_started
 signal movement_ended
 
 ## The node to move
-@export var target_node: Node
+@export var target_node: Node3D
 ## Automatically start movement
 @export var auto_start: bool = false
 ## The destination position
@@ -29,30 +28,26 @@ signal movement_ended
 @export var time_to_destination: float = 1.0
 ## Time until origin
 @export var time_to_origin: float = 1.0
-## Transition type (https://docs.godotengine.org/en/4.0/classes/class_tween.html)
-@export_enum(
-	"TRANS_LINEAR",
-	"TRANS_SINE",
-	"TRANS_QUINT",
-	"TRANS_QUART",
-	"TRANS_QUAD",
-	"TRANS_EXPO",
-	"TRANS_ELASTIC",
-	"TRANS_CUBIC",
-	"TRANS_CIRC",
-	"TRANS_BOUNCE",
-	"TRANS_BACK"
-)
-var transition_type: int = 0
+## Ease Type
+@export var ease_type: Tween.EaseType = Tween.EASE_IN
+## Transition type
+@export var transition_type: Tween.TransitionType = Tween.TRANS_LINEAR
 
-var original_position: Vector3
-var original_rotation: Vector3
+@export_category("Looping")
+## Enable looping
+@export var loop: bool = false
+## Reverse at destination
+@export var reverse_at_destination: bool = false
+
+var original_position: Vector3 = Vector3.ZERO
+var original_rotation: Vector3 = Vector3.ZERO
 var activated: bool = false
-
+var destination_tween: Tween
+var origin_tween: Tween
 
 func _ready():
 	if target_node:
-		original_position = target_node.global_position
+		original_position = target_node.position
 		original_rotation = target_node.rotation
 
 	if auto_start:
@@ -80,34 +75,30 @@ func deactivate():
 
 func move_to_destination():
 	var final_destination_position = destination_position
-	original_position = target_node.global_position
 	if relative_destination_position:
 		final_destination_position = original_position + destination_position
 
-	if final_destination_position == global_position:
+	if final_destination_position and final_destination_position == position:
 		return
 
 	activated = true
-	var destination_tween = _create_tween(_on_destination_reached)
-	var destination_rotation_radians = Vector3(
-		deg_to_rad(destination_rotation.x),
-		deg_to_rad(destination_rotation.y),
-		deg_to_rad(destination_rotation.z)
-	)
+	destination_tween = _create_tween(_on_destination_reached)
 	if final_destination_position:
 		(
 			destination_tween
 			. parallel()
 			. tween_property(
-				target_node, "global_position", final_destination_position, time_to_destination
+				target_node, "position", final_destination_position, time_to_destination
 			)
 			. set_trans(transition_type)
+			. set_ease(ease_type)
 		)
 	(
 		destination_tween
 		. parallel()
-		. tween_property(target_node, "rotation", destination_rotation_radians, time_to_destination)
+		. tween_property(target_node, "rotation", destination_rotation, time_to_destination)
 		. set_trans(transition_type)
+		. set_ease(ease_type)
 	)
 	destination_tween.play()
 	emit_signal("moving_to_destination")
@@ -115,32 +106,43 @@ func move_to_destination():
 
 
 func move_to_origin():
-	if global_position == original_position:
+	if position == original_position:
 		return
 
 	activated = false
-	var origin_tween = _create_tween(_on_origin_reached)
+	origin_tween = _create_tween(_on_origin_reached)
 	if original_position:
 		(
 			origin_tween
 			. parallel()
-			. tween_property(target_node, "global_position", original_position, time_to_origin)
+			. tween_property(target_node, "position", original_position, time_to_origin)
 			. set_trans(transition_type)
+			. set_ease(ease_type)
 		)
 	(
 		origin_tween
 		. parallel()
 		. tween_property(target_node, "rotation", original_rotation, time_to_origin)
 		. set_trans(transition_type)
+		. set_ease(ease_type)
 	)
 	origin_tween.play()
 	emit_signal("moving_to_origin")
 	emit_signal("movement_started")
 	
 func reset() -> void:
-	target_node.global_position = original_position
+	if destination_tween:
+		destination_tween.stop()
+	if origin_tween:
+		origin_tween.stop()
+	target_node.position = original_position
 	target_node.rotation = original_rotation
 
+func pause() -> void:
+	if destination_tween:
+		destination_tween.pause()
+	if origin_tween:
+		origin_tween.pause()
 
 func _create_tween(callback: Callable) -> Tween:
 	var tween = get_tree().create_tween()
@@ -151,8 +153,16 @@ func _create_tween(callback: Callable) -> Tween:
 func _on_destination_reached():
 	emit_signal("destination_reached")
 	emit_signal("movement_ended")
+	if loop:
+		if reverse_at_destination:
+			move_to_origin()
+		else:
+			reset()
+			move_to_destination()
 
 
 func _on_origin_reached():
 	emit_signal("origin_reached")
 	emit_signal("movement_ended")
+	if loop:
+		move_to_destination()

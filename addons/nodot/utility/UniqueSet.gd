@@ -28,6 +28,8 @@ func remove(item: Variant):
 		emit_signal("item_removed", item)
 		emit_signal("items_updated")
 
+func has(item: Variant):
+	return items.has(item)
 
 func get_next_item() -> Variant:
 	if current_index == items.size() - 1:
@@ -35,3 +37,6 @@ func get_next_item() -> Variant:
 		return items[0]
 	current_index += 1
 	return items[current_index]
+
+func get_size() -> int:
+	return items.size()

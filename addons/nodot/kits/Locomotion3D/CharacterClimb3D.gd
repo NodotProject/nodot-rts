@@ -39,20 +39,32 @@ func physics(delta: float):
 		return
 
 	if sm.state == state_ids["climb"]:
+		var ascend_velocity = climb_velocity
+		var descend_velocity = -climb_velocity
+		
+		if character:
+			var view_angle = character.head.rotation.x
+			if view_angle < 0.0:
+				ascend_velocity = -climb_velocity
+				descend_velocity = climb_velocity
+		
 		if Input.is_action_pressed(climb_action):
-			character.velocity.y = climb_velocity
+			character.velocity.y = ascend_velocity
 		elif Input.is_action_pressed(descend_action):
-			character.velocity.y = -climb_velocity
+			character.velocity.y = descend_velocity
 		elif Input.is_action_pressed(jump_action):
 			sm.set_state(state_ids["idle"])
 			sm.set_state(state_ids["jump"])
 		else:
 			character.velocity.y = 0.0
+				
+		character.velocity.x = lerp(character.velocity.x, 0.0, delta * 10.0)
+		character.velocity.z = lerp(character.velocity.z, 0.0, delta * 10.0)
 	
-		var is_on_floor = character._is_on_floor()
+		var is_on_floor = character.was_on_floor
 		if is_on_floor and was_on_floor == false:
 			sm.set_state(state_ids["idle"])
 		
-		was_on_floor = is_on_floor
+		was_on_floor = is_on_floor != null
 			
-	character.move_and_slide()
+		character.move_and_slide()
